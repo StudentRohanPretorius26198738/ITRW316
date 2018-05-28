@@ -1,0 +1,76 @@
+<html>
+<header>
+	<script async="" src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js"></script> <!-- webfont.js for the progress bar -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> <!-- JQuery for the system info script -->
+</header>
+<body>
+		<progress id="progress" value="0"></progress>
+		<button id="button">Download</button>
+		<span id="display"></span>
+		<script>
+		//Declare the conditions for the script to run
+		var progressBar = document.getElementById("progress"),
+		loadBtn = document.getElementById("button"),
+		display = document.getElementById("display");
+		
+		//function that handles the download 
+		function download() {
+			var xhr = new XMLHttpRequest(); //Create a new XHTML request
+			xhr.open("GET", "http://localhost:8080/file.php", true); //The file path or URL that is requested 
+			xhr.responseType = "text"; // Response type is text
+			xhr.onprogress = function(e) { // Calculate the amount the bar is filled up
+				if (e.lengthComputable) { //Check to see if the file size is recieved
+					progressBar.max = e.total; // the maximum value for the progress bar
+					progressBar.value = e.loaded; // current value of the progress bar 
+					display.innerText = Math.floor((e.loaded / e.total) * 100) + '%'; //display the percentage loaded in the inner html
+				}
+			};
+			xhr.onloadstart = function(e) { // function for when the script is loaded to set the starting values of the progress bar
+				progressBar.value = 0; // we start at 0%
+				display.innerText = '0%'; // we display the 0% on the page 
+			};
+			xhr.onloadend = function(e) { // When finished loading 
+				progressBar.value = e.loaded; // make the progress bar full
+				loadBtn.disabled = false; //we can disable the button if we want to here just set the value to true
+				loadBtn.innerHTML = 'Download'; // New text for the button remains the same as the old text
+			};
+			xhr.onload = function (e) {
+				if (this.status == 200) {
+					console.log('Download complete'); // just a log in the console to see if the download is complete 
+				}
+			};
+			xhr.send(null);
+		}
+
+		loadBtn.addEventListener("click", function(e) { // the listener event function
+			this.disabled = true;
+			this.innerHTML = "Downloading...";
+			download();
+		});
+		</script>
+		<div id="contador">Please wait for system info</div>
+		<script>
+			function update() { // a function to update the system values 
+  $("#contador").load('Loading...');  // reference to the div in the html 
+  $.ajax({
+    type: 'GET', // we are using a get method 
+    url: 'sysinfo.php', // we want to get the system info from the sysinfo.php file 
+    success: function(data) { // if successfull we update the html with the data
+      $("#contador").html(data);
+      //$("#contador").html(''); This clears your <div>
+    },
+    error: function (XMLHttpRequest, textStatus, errorThrown) { //we catch an error and show relevant information if the request timed out.
+      $("#contador").html('Timeout...'); 
+      console.log('TextStatus: '+textStatus);
+      console.log('ErrorThrown: ' + errorThrown);
+    }
+});
+}
+$(document).ready(function() {
+    setInterval(update, 1000); // we set the update interval here 
+});
+		</script>
+
+</body>
+	
+</html>
